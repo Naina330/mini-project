@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Enhanced Chatbot Mini Project</title>
+<style>
+  /* Reset & base */
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #1e1e2f;
+    color: #f0f0f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  #chatbot-container {
+    background: #27293d;
+    width: 360px;
+    max-width: 95vw;
+    height: 600px;
+    border-radius: 12px;
+    box-shadow: 0 0 25px rgba(50,50,70,0.7);
+    display: flex;
+    flex-direction: column;
+    user-select: none;
+  }
+  #header {
+    background: #3a3f58;
+    padding: 16px 16px 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 700;
+    font-size: 1.18rem;
+    letter-spacing: 1.2px;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    color: #e0e3f7;
+  }
+  #header .title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  #header .title svg {
+    width: 24px;
+    height: 24px;
+    fill: #6772e5;
+  }
+  #clear-btn {
+    background: transparent;
+    border: 2px solid #6772e5;
+    color: #6772e5;
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  #clear-btn:hover, #clear-btn:focus {
+    background: #6772e5;
+    color: #fff;
+    outline: none;
+  }
+  #chat-window {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .message {
+    max-width: 80%;
+    line-height: 1.4;
+    padding: 10px 14px;
+    border-radius: 18px;
+    font-size: 0.95rem;
+    word-wrap: break-word;
+    opacity: 0;
+    animation: fadeIn 0.4s forwards;
+  }
+  @keyframes fadeIn {
+    to {
+      opacity: 1;
+    }
+  }
+  .user-message {
+    background: linear-gradient(135deg, #6772e5 0%, #9fbcff 100%);
+    color: #fff;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+  }
+  .bot-message {
+    background: #444a78;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+    color: #d8d8f5;
+  }
+  #input-area {
+    display: flex;
+    padding: 14px 16px;
+    background: #3a3f58;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+  }
+  #user-input {
+    flex-grow: 1;
+    border: none;
+    border-radius: 24px;
+    padding: 12px 16px;
+    font-size: 1rem;
+    outline: none;
+  }
+  #send-btn {
+    margin-left: 12px;
+    background: #6772e5;
+    border: none;
+    color: white;
+    padding: 0 18px;
+    border-radius: 24px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  #send-btn:hover, #send-btn:focus {
+    background: #5763c9;
+  }
+  /* Scrollbar for chat window */
+  #chat-window::-webkit-scrollbar {
+    width: 8px;
+  }
+  #chat-window::-webkit-scrollbar-thumb {
+    background: #6772e5;
+    border-radius: 8px;
+  }
+  /* Typing indicator styling */
+  #typing-indicator {
+    align-self: flex-start;
+    display: flex;
+    gap: 5px;
+    padding: 8px 14px;
+    background: #444a78;
+    border-radius: 18px;
+  }
+  #typing-indicator span {
+    width: 8px;
+    height: 8px;
+    background: #d8d8f5;
+    border-radius: 50%;
+    animation: blink 1.4s infinite;
+  }
+  #typing-indicator span:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+  #typing-indicator span:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+  @keyframes blink {
+    0%, 80%, 100% {
+      opacity: 0.3;
+    }
+    40% {
+      opacity: 1;
+    }
+  }
+  /* Mobile responsiveness */
+  @media (max-width: 400px) {
+    #chatbot-container {
+      width: 100vw;
+      height: 100vh;
+      border-radius: 0;
+    }
+    #input-area {
+      padding: 10px;
+    }
+    #send-btn {
+      padding: 0 12px;
+    }
+  }
+</style>
+</head>
+<body>
+  <div id="chatbot-container" role="main" aria-label="Chatbot interface">
+    <div id="header">
+      <div class="title" aria-label="Chatbot name and icon">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 3C7.03 3 3 6.58 3 11c0 2.71 1.64 5.12 4.22 6.47L7 21l4.51-2.43c.32.06.65.1.99.1 4.97 0 9-3.58 9-8 0-4.42-4.03-8-9-8z"></path>
+        </svg>
+        Simple Chatbot
+      </div>
+      <button id="clear-btn" aria-label="Clear chat conversation">Clear Chat</button>
+    </div>
+    <div id="chat-window" aria-live="polite" aria-relevant="additions"></div>
+    <form id="input-area" onsubmit="return sendMessage(event);" aria-label="Input area to chat">
+      <input type="text" id="user-input" autocomplete="off" aria-label="Type your message here" placeholder="Say something..." required />
+      <button type="submit" id="send-btn" aria-label="Send message">Send</button>
+    </form>
+  </div>
+<script>
+  const chatWindow = document.getElementById('chat-window');
+  const userInput = document.getElementById('user-input');
+  const clearBtn = document.getElementById('clear-btn');
+
+  // Predefined chatbot responses with variations
+  const botResponses = {
+    hello: ["Hello! How can I assist you today?", "Hi there! What can I do for you?", "Hey! How's it going?"],
+    howareyou: ["I'm a chatbot, so I don't have feelings, but thanks for asking!", "I'm doing great! How about you?"],
+    help: ["Sure, I am here to help! What do you need?", "How can I assist you today?"],
+    bye: ["Goodbye! Have a great day!", "See you soon!", "Take care!"],
+    thanks: ["You're welcome! Let me know if you have more questions.", "Happy to help!", "Anytime!"],
+    default: ["Sorry, I didn't understand that. Can you please rephrase?", "Could you please clarify?", "I'm not sure I get that."]
+  };
+
+  // Normalize text for matching
+  function normalize(text) {
+    return text.toLowerCase().replace(/[^a-z0-9]/g, '');
+  }
+
+  // Add message with fade animation
+  function addMessage(message, sender) {
+    const messageElem = document.createElement('div');
+    messageElem.classList.add('message', sender === 'user' ? 'user-message' : 'bot-message');
+    messageElem.textContent = message;
+    chatWindow.appendChild(messageElem);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+  }
+
+  // Add typing indicator
+  function showTypingIndicator() {
+    const indicator = document.createElement('div');
+    indicator.id = 'typing-indicator';
+    indicator.setAttribute('aria-live', 'polite');
+    indicator.setAttribute('aria-label', 'Chatbot is typing');
+    for(let i=0; i<3; i++) {
+      const dot = document.createElement('span');
+      indicator.appendChild(dot);
+    }
+    chatWindow.appendChild(indicator);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+    return indicator;
+  }
+
+  // Remove typing indicator
+  function removeTypingIndicator(indicator) {
+    if(indicator && indicator.parentNode) {
+      indicator.parentNode.removeChild(indicator);
+    }
+  }
+
+  // Get random response from array
+  function getRandomResponse(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  // Get current time based greeting
+  function getTimeGreeting() {
+    const now = new Date();
+    const hour = now.getHours();
+    if(hour >= 5 && hour < 12) return "Good morning! ";
+    if(hour >= 12 && hour < 18) return "Good afternoon! ";
+    return "Good evening! ";
+  }
+
+  // Generate chatbot response
+  function getBotResponse(input) {
+    const norm = normalize(input);
+    for (const key in botResponses) {
+      if (key !== "default" && norm.includes(key)) {
+        return getRandomResponse(botResponses[key]);
+      }
+    }
+    return getRandomResponse(botResponses.default);
+  }
+
+  // Send message handler
+  function sendMessage(event) {
+    event.preventDefault();
+    const text = userInput.value.trim();
+    if (!text) return false;
+
+    addMessage(text, 'user');
+    userInput.value = '';
+    userInput.disabled = true;
+    const typingIndicator = showTypingIndicator();
+    // Simulate typing delay
+    setTimeout(() => {
+      removeTypingIndicator(typingIndicator);
+      const response = getBotResponse(text);
+      addMessage(response, 'bot');
+      userInput.disabled = false;
+      userInput.focus();
+    }, 1200);
+
+    return false;
+  }
+
+  // Clear chat history
+  clearBtn.onclick = () => {
+    chatWindow.innerHTML = '';
+    addMessage(getTimeGreeting() + "I'm your friendly chatbot. Try typing something and press send.", 'bot');
+    userInput.focus();
+  };
+
+  // Initial greeting on load
+  window.onload = () => {
+    addMessage(getTimeGreeting() + "I'm your friendly chatbot. Try typing something and press send.", 'bot');
+    userInput.focus();
+  };
+</script>
+</body>
+</html>
+
